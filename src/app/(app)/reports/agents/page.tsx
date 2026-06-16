@@ -93,13 +93,12 @@ export default async function AgentReportPage({
       </div>
 
       <div className="card">
-        <div className="toolbar" style={{ flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.8rem" }}>
+        <div className="filter-tabs" style={{ marginBottom: "0.9rem" }}>
           {presets.map((p) => (
             <Link
               key={p.key}
               href={`/reports/agents?from=${p.from}&to=${p.to}&sort=${sort}`}
-              className="btn-secondary"
-              style={{ padding: "0.35rem 0.8rem" }}
+              className={p.from === from && p.to === to ? "filter-tab active" : "filter-tab"}
             >
               {p.label}
             </Link>
@@ -138,8 +137,7 @@ export default async function AgentReportPage({
               <Link
                 key={s.key}
                 href={href({ sort: s.key })}
-                className={sort === s.key ? "btn-primary" : "btn-secondary"}
-                style={{ padding: "0.3rem 0.7rem", fontSize: "0.85rem" }}
+                className={sort === s.key ? "filter-tab active" : "filter-tab"}
               >
                 {s.label}
               </Link>

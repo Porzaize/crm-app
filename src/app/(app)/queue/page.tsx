@@ -221,12 +221,11 @@ export default async function QueuePage({
             <Link
               key={t.key}
               href={viewHref(t.key)}
-              className={view === t.key ? "btn-primary" : "btn-secondary"}
-              style={{ padding: "0.35rem 0.85rem" }}
+              className={view === t.key ? "filter-tab active" : "filter-tab"}
             >
               {t.label}
               {t.count != null && (
-                <span style={{ marginLeft: 6, opacity: 0.85 }}>({t.count.toLocaleString("th-TH")})</span>
+                <span className="count">{t.count.toLocaleString("th-TH")}</span>
               )}
             </Link>
           ))}

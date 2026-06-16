@@ -80,9 +80,9 @@ export default async function CohortPage({
       </div>
 
       <div className="card">
-        <div className="toolbar" style={{ flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.8rem" }}>
+        <div className="filter-tabs" style={{ marginBottom: "0.9rem" }}>
           {presets.map((p) => (
-            <Link key={p.key} href={`/reports/cohort?from=${p.from}&to=${p.to}`} className="btn-secondary" style={{ padding: "0.35rem 0.8rem" }}>
+            <Link key={p.key} href={`/reports/cohort?from=${p.from}&to=${p.to}`} className={p.from === from && p.to === to ? "filter-tab active" : "filter-tab"}>
               {p.label}
             </Link>
           ))}

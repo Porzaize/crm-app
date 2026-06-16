@@ -113,13 +113,12 @@ export default async function ReportsPage({
       </PageBanner>
 
       <div className="card">
-        <div className="toolbar" style={{ flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.8rem" }}>
+        <div className="filter-tabs" style={{ marginBottom: "0.9rem" }}>
           {presets.map((p) => (
             <Link
               key={p.key}
               href={`/reports?from=${p.from}&to=${p.to}`}
-              className="btn-secondary"
-              style={{ padding: "0.35rem 0.8rem" }}
+              className={p.from === from && p.to === to ? "filter-tab active" : "filter-tab"}
             >
               {p.label}
             </Link>
