@@ -10,7 +10,7 @@ export default async function ImportPage() {
     <>
       <div className="toolbar">
         <h1 style={{ margin: 0 }}>นำเข้าข้อมูลจากไฟล์ Excel</h1>
-        <Link href="/admin/import/history" className="btn-secondary">ประวัติการนำเข้า →</Link>
+        <Link href="/admin/import/history" className="btn-link">ประวัติการนำเข้า <span className="arr">→</span></Link>
       </div>
       <p className="muted">
         อัปโหลดไฟล์ตามรูปแบบเดิม (ชีทแยกตามเว็บ + ชีทสรุป) — ระบบจะอ่านเบอร์/วันเวลาโทร/ผลสาย/ยอดฝาก/โบนัสให้อัตโนมัติ

@@ -56,8 +56,8 @@ export default async function ContactDetailPage({
     <>
       <div className="toolbar">
         <h1 style={{ margin: 0 }}>บันทึกผลสาย</h1>
-        <Link href="/queue" className="btn-secondary">
-          ← กลับคิว
+        <Link href="/queue" className="btn-link back">
+          <span className="arr">←</span> กลับคิว
         </Link>
       </div>
 

@@ -20,8 +20,8 @@ export default async function NewCustomerPage() {
     <>
       <div className="toolbar">
         <h1 style={{ margin: 0 }}>เพิ่มลูกค้าใหม่</h1>
-        <Link href="/customers" className="btn-secondary">
-          ← กลับ
+        <Link href="/customers" className="btn-link back">
+          <span className="arr">←</span> กลับ
         </Link>
       </div>
       <div className="card">

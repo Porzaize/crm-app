@@ -91,8 +91,8 @@ export default async function CustomerDetailPage({
     <>
       <div className="toolbar">
         <h1 style={{ margin: 0 }}>ลูกค้า <PhoneLink phone={customer.phone} /></h1>
-        <Link href="/customers" className="btn-secondary">
-          ← กลับ
+        <Link href="/customers" className="btn-link back">
+          <span className="arr">←</span> กลับ
         </Link>
       </div>
 

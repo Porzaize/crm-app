@@ -74,8 +74,8 @@ export default async function CohortPage({
     <>
       <div className="toolbar">
         <h1 style={{ margin: 0 }}>Cohort — โทรแล้วกลับมาฝาก</h1>
-        <Link href={`/reports?from=${from}&to=${to}`} className="btn-secondary">
-          รายงานรายเว็บ →
+        <Link href={`/reports?from=${from}&to=${to}`} className="btn-link">
+          รายงานรายเว็บ <span className="arr">→</span>
         </Link>
       </div>
 

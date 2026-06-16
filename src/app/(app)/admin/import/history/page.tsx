@@ -49,7 +49,7 @@ export default async function ImportHistoryPage({
     <>
       <div className="toolbar">
         <h1 style={{ margin: 0 }}>ประวัติการนำเข้า</h1>
-        <Link href="/admin/import" className="btn-secondary">← นำเข้าข้อมูล</Link>
+        <Link href="/admin/import" className="btn-link back"><span className="arr">←</span> นำเข้าข้อมูล</Link>
       </div>
 
       <div className="card">

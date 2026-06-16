@@ -74,7 +74,7 @@ export default async function AuditPage({
     <>
       <div className="toolbar">
         <h1 style={{ margin: 0 }}>Audit Log</h1>
-        <Link href="/admin" className="btn-secondary">← ผู้ใช้งาน</Link>
+        <Link href="/admin" className="btn-link back"><span className="arr">←</span> ผู้ใช้งาน</Link>
       </div>
 
       <div className="card">
