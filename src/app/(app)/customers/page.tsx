@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { requireSession } from "@/lib/auth";
+import { requireSession, can } from "@/lib/auth";
 import {
   formatPhone,
   formatMoney,
@@ -76,7 +76,13 @@ export default async function CustomersPage({
     return `/customers${s ? "?" + s : ""}`;
   })();
 
-  const canManage = session.role !== "AGENT";
+  // ลิงก์ดาวน์โหลด CSV — พก filter ปัจจุบันไปด้วย (เฉพาะหัวหน้าขึ้นไป)
+  const exportParams = new URLSearchParams();
+  if (q) exportParams.set("q", q);
+  if (brandId) exportParams.set("brand", String(brandId));
+  if (status) exportParams.set("status", status);
+  const exportHref = `/api/customers/export?${exportParams.toString()}`;
+  const canExport = can(session, "customer.export");
 
   return (
     <>
@@ -84,12 +90,17 @@ export default async function CustomersPage({
         title={showArchived ? "ลูกค้า (ที่เก็บไว้)" : "ลูกค้า"}
         subtitle="รายชื่อลูกค้าทั้งหมด · ค้นหา กรอง และส่งออกข้อมูล"
       >
-        {canManage && (
+        {canExport && (
+          <a href={exportHref} className="btn-secondary" style={{ whiteSpace: "nowrap" }}>
+            ⬇ ดาวน์โหลด CSV
+          </a>
+        )}
+        {canExport && (
           <Link href={toggleArchivedHref} className="btn-secondary">
             {showArchived ? "← กลับรายการปกติ" : "🗂 ดูที่เก็บไว้"}
           </Link>
         )}
-        {canManage && !showArchived && (
+        {canExport && !showArchived && (
           <Link href="/customers/new" className="btn-primary">
             + เพิ่มลูกค้า
           </Link>
