@@ -324,11 +324,11 @@ export default async function QueuePage({
 
         {totalPages > 1 && (
           <div className="pagination">
-            {page > 1 && <Link href={qs(page - 1)} className="btn-secondary">← ก่อนหน้า</Link>}
+            {page > 1 && <Link href={qs(page - 1)} className="btn-link back"><span className="arr">←</span> ก่อนหน้า</Link>}
             <span className="muted">
               หน้า {page} / {totalPages}
             </span>
-            {page < totalPages && <Link href={qs(page + 1)} className="btn-secondary">ถัดไป →</Link>}
+            {page < totalPages && <Link href={qs(page + 1)} className="btn-link">ถัดไป <span className="arr">→</span></Link>}
           </div>
         )}
       </div>
