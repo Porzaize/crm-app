@@ -1,0 +1,237 @@
+// CRM โทรติดตามลูกค้า (win-back) — schema
+// แก้แล้วรัน: npx prisma db push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  AGENT
+}
+
+enum CustomerStatus {
+  ACTIVE
+  LAPSED
+  DO_NOT_CALL
+}
+
+enum ContactStatus {
+  PENDING
+  DONE
+}
+
+enum CallOutcome {
+  ANSWERED // รับสาย
+  ANSWERED_HUNG_UP // รับแล้วตัดสาย
+  ANSWERED_SILENT // รับแล้วเงียบ
+  NO_ANSWER // ไม่รับสาย
+  UNREACHABLE // ติดต่อไม่ได้
+  CALL_DROPPED // ตัดสาย
+  VOICEMAIL // ฝากข้อความ
+  NOT_INTERESTED // ไม่สนใจ
+  INCONVENIENT // ไม่สะดวก
+  QUIT_PLAYING // เลิกเล่น
+  NOT_REGISTERED // ไม่ได้สมัคร
+  DUPLICATE // ซ้ำ
+  OTHER
+}
+
+enum CallDisposition {
+  NONE
+  PROMO_20 // เสนอโปร 20%
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  displayName  String
+  passwordHash String
+  role         Role      @default(AGENT)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  // ความปลอดภัยบัญชี
+  tokenVersion     Int       @default(0) // bump เพื่อ revoke session เดิมทั้งหมด (เปลี่ยน/รีเซ็ตรหัส)
+  failedLoginCount Int       @default(0) // นับ login ผิดต่อเนื่อง
+  lockedUntil      DateTime? // ล็อกบัญชีถึงเวลานี้ (null = ไม่ล็อก)
+  // สิทธิ์รายคน (override บทบาท) — customPermissions=false = ใช้ค่าตั้งต้นของบทบาท, true = ใช้ permissions ที่ติ๊กเอง
+  customPermissions Boolean  @default(false)
+  permissions       String[] @default([]) // permission key ที่อนุญาต (มีผลเมื่อ customPermissions=true)
+
+  callLogs         CallLog[]
+  assignedContacts CampaignContact[]
+  statusChanges    StatusChangeLog[]
+  auditLogs        AuditLog[]
+}
+
+model Brand {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  customers Customer[]
+  campaigns Campaign[]
+}
+
+model Customer {
+  id        Int            @id @default(autoincrement())
+  phone     String
+  brandId   Int
+  brand     Brand          @relation(fields: [brandId], references: [id])
+  status    CustomerStatus @default(LAPSED)
+  archived  Boolean        @default(false) // soft-delete: ซ่อนจากรายการ/คิว แต่เก็บประวัติไว้
+  createdAt DateTime       @default(now())
+
+  contacts      CampaignContact[]
+  deposits      DepositEvent[]
+  bonuses       BonusAdjustment[]
+  statusChanges StatusChangeLog[]
+
+  @@unique([brandId, phone])
+  @@index([phone])
+  @@index([status])
+  @@index([archived])
+}
+
+model Campaign {
+  id        Int      @id @default(autoincrement())
+  name      String
+  brandId   Int?
+  brand     Brand?   @relation(fields: [brandId], references: [id])
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  contacts CampaignContact[]
+}
+
+model CampaignContact {
+  id           Int           @id @default(autoincrement())
+  campaignId   Int
+  campaign     Campaign      @relation(fields: [campaignId], references: [id])
+  customerId   Int
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  assignedToId Int?
+  assignedTo   User?         @relation(fields: [assignedToId], references: [id])
+  status       ContactStatus @default(PENDING)
+  nextCallAt   DateTime?
+  createdAt    DateTime      @default(now())
+
+  callLogs CallLog[]
+
+  @@unique([campaignId, customerId])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([nextCallAt])
+}
+
+model CallLog {
+  id            Int             @id @default(autoincrement())
+  contactId     Int
+  contact       CampaignContact @relation(fields: [contactId], references: [id])
+  callerId      Int? // null = ข้อมูลนำเข้าจาก Excel
+  caller        User?           @relation(fields: [callerId], references: [id])
+  calledAt      DateTime
+  outcome       CallOutcome
+  disposition   CallDisposition @default(NONE)
+  smsSent       Boolean         @default(false)
+  smsTemplateId Int? // template ที่ใช้ส่ง SMS (ข้อ 11) — เก็บอ้างอิงไว้ดูสถิติ
+  smsTemplate   SmsTemplate?    @relation(fields: [smsTemplateId], references: [id])
+  note          String?
+  createdAt     DateTime        @default(now())
+
+  @@index([contactId])
+  @@index([calledAt])
+  @@index([callerId])
+  @@index([smsTemplateId])
+}
+
+// ตั้งค่าแจ้งเตือน Telegram (ข้อ 12) — เก็บ chat id/เกณฑ์/สวิตช์ใน DB เพื่อแก้ได้โดยไม่ deploy ใหม่
+// (token อยู่ใน .env เท่านั้น) key เช่น team_chat_id, head_chat_id, big_deposit_threshold, notify_dnc
+model NotificationSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+// คลังข้อความ SMS (ข้อ 11) — template กลางที่หัวหน้าคุม มีตัวแปร {{เว็บ}} {{เบอร์}} {{โปร}}
+model SmsTemplate {
+  id        Int       @id @default(autoincrement())
+  name      String // ชื่อเรียก เช่น "ทวงรัก + โปร 20%"
+  body      String // เนื้อความ มีตัวแปร {{เว็บ}} {{โปร}} {{เบอร์}}
+  active    Boolean   @default(true)
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  callLogs CallLog[]
+
+  @@index([active, sortOrder])
+}
+
+model DepositEvent {
+  id         Int       @id @default(autoincrement())
+  customerId Int
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  date       DateTime // date-only (UTC midnight ของวันไทย)
+  amount     Float
+  importedAt DateTime? // != null = มาจากการนำเข้าไฟล์ (โหมด replace ลบเฉพาะกลุ่มนี้); null = กรอกมือผ่านแอป
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
+  @@index([date])
+  @@index([importedAt])
+}
+
+// Audit Log (ข้อ 10) — บันทึกทุกการกระทำสำคัญแบบ generic (before/after เฉพาะ field ที่เปลี่ยน)
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int? // null = ระบบ (เช่น import)
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String // เช่น "customer.status_change", "user.reset_password"
+  entity    String // ชื่อ entity เช่น "Customer", "User"
+  entityId  Int
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([action])
+}
+
+// ประวัติการเปลี่ยนสถานะลูกค้า (ข้อ 7) — ใครเปลี่ยนจากอะไรเป็นอะไร เมื่อไหร่ เพราะอะไร
+model StatusChangeLog {
+  id          Int            @id @default(autoincrement())
+  customerId  Int
+  customer    Customer       @relation(fields: [customerId], references: [id])
+  fromStatus  CustomerStatus
+  toStatus    CustomerStatus
+  changedById Int? // null = ระบบ
+  changedBy   User?          @relation(fields: [changedById], references: [id])
+  reason      String?
+  createdAt   DateTime       @default(now())
+
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model BonusAdjustment {
+  id         Int       @id @default(autoincrement())
+  customerId Int
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  date       DateTime
+  amount     Float
+  importedAt DateTime? // != null = มาจากการนำเข้าไฟล์ (โหมด replace ลบเฉพาะกลุ่มนี้); null = กรอกมือผ่านแอป
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
+  @@index([date])
+  @@index([importedAt])
+}
