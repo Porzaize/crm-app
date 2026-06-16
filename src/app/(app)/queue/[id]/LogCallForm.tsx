@@ -9,20 +9,6 @@ const initial: LogCallState = {};
 
 type Template = { id: number; name: string; body: string };
 
-/** Date -> ค่าสำหรับ <input type="datetime-local"> โดยอ่านเป็นเวลาไทย (UTC+7) */
-function toLocalInput(d: Date): string {
-  const b = new Date(d.getTime() + 7 * 60 * 60 * 1000);
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${b.getUTCFullYear()}-${p(b.getUTCMonth() + 1)}-${p(b.getUTCDate())}T${p(b.getUTCHours())}:${p(b.getUTCMinutes())}`;
-}
-
-/** วันนี้เวลาไทย + เพิ่มวัน แล้วตั้งชั่วโมง:นาที (เวลาไทย) */
-function bangkokAtHour(addDays: number, hour: number, minute = 0): Date {
-  const b = new Date(Date.now() + 7 * 60 * 60 * 1000);
-  const target = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate() + addDays, hour, minute);
-  return new Date(target - 7 * 60 * 60 * 1000); // กลับเป็น instant จริง
-}
-
 export default function LogCallForm({
   contactId,
   templates,
@@ -33,19 +19,12 @@ export default function LogCallForm({
   smsContext: SmsContext;
 }) {
   const [state, formAction, pending] = useActionState(logCall, initial);
-  const [nextCallAt, setNextCallAt] = useState("");
   const [smsSent, setSmsSent] = useState(false);
   const [templateId, setTemplateId] = useState("");
   const [copied, setCopied] = useState(false);
 
   const selected = templates.find((t) => String(t.id) === templateId);
   const smsText = selected ? renderTemplate(selected.body, smsContext) : "";
-
-  const presets: { label: string; get: () => Date }[] = [
-    { label: "+1 ชม.", get: () => new Date(Date.now() + 60 * 60 * 1000) },
-    { label: "พรุ่งนี้ 10:00", get: () => bangkokAtHour(1, 10) },
-    { label: "+3 วัน", get: () => bangkokAtHour(3, 10) },
-  ];
 
   async function handleCopy() {
     try {
@@ -144,41 +123,6 @@ export default function LogCallForm({
             )}
           </>
         )}
-      </div>
-
-      <div className="field">
-        <label htmlFor="nextCallAt">นัดโทรอีกครั้ง (ไม่บังคับ)</label>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
-          {presets.map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              className="btn-secondary"
-              style={{ padding: "0.25rem 0.6rem", fontSize: "0.85rem" }}
-              onClick={() => setNextCallAt(toLocalInput(p.get()))}
-            >
-              {p.label}
-            </button>
-          ))}
-          {nextCallAt && (
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ padding: "0.25rem 0.6rem", fontSize: "0.85rem" }}
-              onClick={() => setNextCallAt("")}
-            >
-              ล้าง
-            </button>
-          )}
-        </div>
-        <input
-          id="nextCallAt"
-          name="nextCallAt"
-          type="datetime-local"
-          value={nextCallAt}
-          onChange={(e) => setNextCallAt(e.target.value)}
-        />
-        <small className="muted">ถ้ากรอก รายการจะกลับเข้าคิวตามเวลานัด (เวลาไทย)</small>
       </div>
 
       <div className="field">
