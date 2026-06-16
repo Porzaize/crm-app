@@ -64,6 +64,9 @@ model User {
   // สิทธิ์รายคน (override บทบาท) — customPermissions=false = ใช้ค่าตั้งต้นของบทบาท, true = ใช้ permissions ที่ติ๊กเอง
   customPermissions Boolean  @default(false)
   permissions       String[] @default([]) // permission key ที่อนุญาต (มีผลเมื่อ customPermissions=true)
+  // ยืนยันตัวตน 2 ชั้น (TOTP) — opt-in รายคน, ปิดเป็นค่าเริ่มต้น
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String? // base32 secret (null = ยังไม่ตั้ง)
 
   callLogs         CallLog[]
   assignedContacts CampaignContact[]

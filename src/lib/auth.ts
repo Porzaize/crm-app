@@ -44,6 +44,25 @@ export async function createSessionToken(session: SessionUser, tokenVersion = 0)
     .sign(secret());
 }
 
+/** โทเค็นชั่วคราว (5 นาที) ออกหลังยืนยันรหัสผ่านถูก แต่ยังต้องกรอกรหัส 2FA */
+export async function signPending2FA(userId: number): Promise<string> {
+  return await new SignJWT({ p2fa: userId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("5m")
+    .sign(secret());
+}
+
+/** ตรวจโทเค็นชั่วคราว 2FA — คืน userId ถ้าใช้ได้ */
+export async function verifyPending2FA(token: string): Promise<number | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    return typeof payload.p2fa === "number" ? payload.p2fa : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function setSessionCookie(session: SessionUser, tokenVersion = 0) {
   const token = await createSessionToken(session, tokenVersion);
   const jar = await cookies();
