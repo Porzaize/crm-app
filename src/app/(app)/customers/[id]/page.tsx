@@ -10,6 +10,7 @@ import {
   DISPOSITION_LABELS,
   CUSTOMER_STATUS_LABELS,
 } from "@/lib/labels";
+import StatusForm from "./StatusForm";
 import ManageCustomer from "./ManageCustomer";
 import ConfirmButton from "@/components/ConfirmButton";
 import PhoneLink from "@/components/PhoneLink";
@@ -17,8 +18,15 @@ import { archiveCustomer, restoreCustomer } from "../actions";
 import { auditActionLabel } from "@/lib/labels";
 import { renderAuditDiff } from "@/lib/audit";
 import { bangkokYMD } from "@/lib/dates";
+import type { CustomerStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+
+const STATUS_BADGE: Record<CustomerStatus, string> = {
+  ACTIVE: "green",
+  LAPSED: "amber",
+  DO_NOT_CALL: "red",
+};
 
 export default async function CustomerDetailPage({
   params,
@@ -39,6 +47,10 @@ export default async function CustomerDetailPage({
       contacts: {
         include: { callLogs: { include: { caller: true } }, assignedTo: true },
       },
+      statusChanges: {
+        include: { changedBy: true },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
   if (!customer) notFound();
@@ -50,6 +62,7 @@ export default async function CustomerDetailPage({
   const bonusTotal = customer.bonuses.reduce((a, b) => a + b.amount, 0);
 
   const canManage = can(session, "customer.manage");
+  const canStatus = can(session, "customer.status");
 
   // Audit log ของลูกค้ารายนี้ (ข้อ 10) — เฉพาะผู้มีสิทธิ์จัดการลูกค้า
   const auditLogs = canManage
@@ -104,6 +117,13 @@ export default async function CustomerDetailPage({
         </div>
       </div>
 
+      {canStatus && (
+        <div className="card">
+          <h2>เปลี่ยนสถานะ</h2>
+          <StatusForm customerId={customer.id} current={customer.status} />
+        </div>
+      )}
+
       {canManage && (
         <div className="card">
           <h2>จัดการลูกค้า</h2>
@@ -144,6 +164,40 @@ export default async function CustomerDetailPage({
           </div>
         </div>
       )}
+
+      <div className="card">
+        <h2>ประวัติการเปลี่ยนสถานะ ({customer.statusChanges.length})</h2>
+        {customer.statusChanges.length === 0 ? (
+          <p className="muted">ยังไม่มีการเปลี่ยนสถานะ</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>เวลา</th>
+                <th>จาก</th>
+                <th>เป็น</th>
+                <th>โดย</th>
+                <th>เหตุผล</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customer.statusChanges.map((s) => (
+                <tr key={s.id}>
+                  <td>{formatDateTime(s.createdAt)}</td>
+                  <td>{CUSTOMER_STATUS_LABELS[s.fromStatus]}</td>
+                  <td>
+                    <span className={`badge ${STATUS_BADGE[s.toStatus]}`}>
+                      {CUSTOMER_STATUS_LABELS[s.toStatus]}
+                    </span>
+                  </td>
+                  <td>{s.changedBy?.displayName ?? <span className="muted">ระบบ</span>}</td>
+                  <td>{s.reason ?? <span className="muted">—</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
 
       {canManage && (
         <div className="card">
