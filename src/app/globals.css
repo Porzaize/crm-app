@@ -178,13 +178,46 @@ h3 {
 .topbar-brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1.02rem;
+  gap: 0.6rem;
   color: var(--text);
-  letter-spacing: -0.01em;
   white-space: nowrap;
   min-width: calc(var(--sidebar-w) - 1.25rem);
+}
+.topbar-brand:hover {
+  text-decoration: none;
+}
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.4);
+  font-size: 1.05rem;
+  flex: 0 0 auto;
+}
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.brand-text .b-main {
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.brand-text .b-sub {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  text-transform: uppercase;
 }
 .topbar-actions {
   display: flex;
@@ -525,6 +558,7 @@ h3 {
   gap: 1rem;
 }
 .card.stat {
+  --accent: var(--primary);
   position: relative;
   overflow: hidden;
   padding: 1.15rem 1.3rem;
@@ -536,9 +570,38 @@ h3 {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 3px;
-  background: var(--primary);
-  opacity: 0.7;
+  width: 4px;
+  background: var(--accent);
+  opacity: 0.9;
+}
+/* สีตามประเภทข้อมูล (นัยยะ) + ไอคอนมุมการ์ด */
+.stat.green {
+  --accent: var(--green);
+}
+.stat.amber {
+  --accent: var(--amber);
+}
+.stat.red {
+  --accent: var(--red);
+}
+.stat.blue {
+  --accent: var(--blue);
+}
+.stat.green .value {
+  color: var(--green);
+}
+.stat.amber .value {
+  color: var(--amber);
+}
+.stat.red .value {
+  color: var(--red);
+}
+.stat .ico {
+  position: absolute;
+  top: 0.85rem;
+  right: 1rem;
+  font-size: 1.15rem;
+  opacity: 0.5;
 }
 .card.stat:hover {
   transform: translateY(-2px);

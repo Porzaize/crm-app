@@ -140,41 +140,48 @@ export default async function DashboardPage() {
       <PageBanner title="แดชบอร์ด" subtitle="ภาพรวมการติดตามลูกค้า ยอดโทร และยอดกลับมาฝาก" />
 
       <div className="card-grid">
-        <div className="card stat">
+        <div className="card stat blue">
+          <span className="ico">👥</span>
           <div className="label">ลูกค้าทั้งหมด</div>
           <div className="value">{total.customers.toLocaleString("th-TH")}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat amber">
+          <span className="ico">⏳</span>
           <div className="label">ขาดฝาก (รอติดตาม)</div>
           <div className="value">{lapsed.toLocaleString("th-TH")}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat blue">
+          <span className="ico">📞</span>
           <div className="label">{session.role === "AGENT" ? "คิวของฉัน (รอโทร)" : "คิวรอโทรทั้งหมด"}</div>
           <div className="value">{pendingToday.toLocaleString("th-TH")}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat amber">
+          <span className="ico">⏰</span>
           <div className="label">นัดโทรถึงกำหนด</div>
-          <div className="value" style={dueCallbacks > 0 ? { color: "var(--amber, #b45309)" } : undefined}>
-            {dueCallbacks.toLocaleString("th-TH")}
-          </div>
+          <div className="value">{dueCallbacks.toLocaleString("th-TH")}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat red">
+          <span className="ico">🚫</span>
           <div className="label">ห้ามโทร</div>
           <div className="value">{doNotCall.toLocaleString("th-TH")}</div>
         </div>
         <div className="card stat">
+          <span className="ico">📲</span>
           <div className="label">โทรไปแล้ว (สาย)</div>
           <div className="value">{total.calls.toLocaleString("th-TH")}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat green">
+          <span className="ico">✅</span>
           <div className="label">รับสาย</div>
           <div className="value">{pct(total.answered, total.calls)}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat green">
+          <span className="ico">💚</span>
           <div className="label">กลับมาฝาก (คน)</div>
           <div className="value">{total.depositors.toLocaleString("th-TH")}</div>
         </div>
-        <div className="card stat">
+        <div className="card stat green">
+          <span className="ico">💰</span>
           <div className="label">ยอดกลับมาฝากรวม (บาท)</div>
           <div className="value">{formatMoney(total.deposit_total)}</div>
         </div>

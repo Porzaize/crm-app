@@ -33,7 +33,11 @@ export default function Topbar({
   return (
     <header className="topbar">
       <Link href="/" className="topbar-brand">
-        📞 CRM ติดตามลูกค้า
+        <span className="brand-logo">📞</span>
+        <span className="brand-text">
+          <span className="b-main">CRM ติดตามลูกค้า</span>
+          <span className="b-sub">โทรติดตาม · วินแบ็ก</span>
+        </span>
       </Link>
 
       <nav className="topbar-actions">
