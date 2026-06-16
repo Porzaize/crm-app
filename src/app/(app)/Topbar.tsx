@@ -12,7 +12,6 @@ const QUICK_ACTIONS: QuickAction[] = [
   { href: "/queue", label: "คิวโทร", icon: "📞" },
   { href: "/customers/new", label: "เพิ่มลูกค้า", icon: "➕", perm: "customer.manage" },
   { href: "/admin/import", label: "นำเข้าข้อมูล", icon: "📥", perm: "import.run" },
-  { href: "/reports", label: "รายงาน", icon: "📈", perm: "report.view" },
 ];
 
 export default function Topbar({
@@ -27,7 +26,6 @@ export default function Topbar({
   permissions: readonly Permission[] | "*";
 }) {
   const actions = QUICK_ACTIONS.filter((a) => !a.perm || listHas(permissions, a.perm));
-  const canNotify = listHas(permissions, "notification.manage");
   const initial = (displayName || username || "?").trim().charAt(0).toUpperCase();
 
   return (
@@ -46,15 +44,6 @@ export default function Topbar({
       </nav>
 
       <div className="topbar-right">
-        {canNotify ? (
-          <Link href="/admin/notifications" className="topbar-icon" aria-label="แจ้งเตือน" title="แจ้งเตือน">
-            🔔
-          </Link>
-        ) : (
-          <span className="topbar-icon" aria-hidden="true">
-            🔔
-          </span>
-        )}
         <ThemeToggle />
         <Link href="/profile" className="topbar-user" title="โปรไฟล์ / เปลี่ยนรหัสผ่าน">
           <span className="avatar">{initial}</span>

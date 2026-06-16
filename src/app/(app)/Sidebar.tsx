@@ -25,18 +25,8 @@ export default function Sidebar({
       ],
     },
     {
-      title: "รายงาน",
-      items: [
-        { href: "/reports", label: "รายงาน", icon: "📈", perm: "report.view" },
-        { href: "/reports/agents", label: "ผลงานพนักงาน", icon: "🏆", perm: "report.view" },
-        { href: "/reports/cohort", label: "Cohort", icon: "🧬", perm: "report.view" },
-      ],
-    },
-    {
       title: "เครื่องมือ",
       items: [
-        { href: "/admin/sms-templates", label: "คลังข้อความ SMS", icon: "💬", perm: "sms.manage" },
-        { href: "/admin/notifications", label: "แจ้งเตือน Telegram", icon: "🔔", perm: "notification.manage" },
         { href: "/admin/campaigns", label: "แคมเปญ", icon: "🎯", perm: "campaign.manage" },
         { href: "/admin/import", label: "นำเข้าข้อมูล", icon: "📥", perm: "import.run" },
       ],
@@ -47,7 +37,6 @@ export default function Sidebar({
         { href: "/admin", label: "ผู้ใช้งาน", icon: "🛡️", perm: "user.manage" },
         { href: "/admin/brands", label: "จัดการเว็บ", icon: "🌐", perm: "brand.manage" },
         { href: "/admin/activity", label: "ตรวจสอบ/ทุจริต", icon: "🔎", perm: "activity.view" },
-        { href: "/admin/audit", label: "Audit Log", icon: "📋", perm: "audit.view" },
       ],
     },
   ];
