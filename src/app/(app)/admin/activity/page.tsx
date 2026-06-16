@@ -128,7 +128,7 @@ export default async function ActivityPage({
 
   const rows = [...byUser.values()].sort((x, y) => y.depositSum + y.bonusSum - (x.depositSum + x.bonusSum));
   const preset = (label: string, f: string, t: string) => (
-    <Link href={`/admin/activity?from=${f}&to=${t}`} className="btn-secondary" style={{ padding: "0.3rem 0.7rem" }}>
+    <Link href={`/admin/activity?from=${f}&to=${t}`} className={f === fromYMD && t === toYMD ? "filter-tab active" : "filter-tab"}>
       {label}
     </Link>
   );
