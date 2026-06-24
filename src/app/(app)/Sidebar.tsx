@@ -27,6 +27,7 @@ export default function Sidebar({
     {
       title: "เครื่องมือ",
       items: [
+        { href: "/admin/sms-templates", label: "คลังข้อความ SMS", icon: "💬", perm: "sms.manage" },
         { href: "/admin/campaigns", label: "แคมเปญ", icon: "🎯", perm: "campaign.manage" },
         { href: "/admin/import", label: "นำเข้าข้อมูล", icon: "📥", perm: "import.run" },
       ],
