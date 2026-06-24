@@ -27,6 +27,7 @@ export default function Sidebar({
     {
       title: "เครื่องมือ",
       items: [
+        { href: "/admin/notifications", label: "แจ้งเตือน Telegram", icon: "🔔", perm: "notification.manage" },
         { href: "/admin/campaigns", label: "แคมเปญ", icon: "🎯", perm: "campaign.manage" },
         { href: "/admin/import", label: "นำเข้าข้อมูล", icon: "📥", perm: "import.run" },
       ],
