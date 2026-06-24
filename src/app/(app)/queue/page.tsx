@@ -6,22 +6,76 @@ import { bulkAssignContacts } from "./actions";
 import { OUTCOME_LABELS, CONTACT_STATUS_LABELS } from "@/lib/labels";
 import PhoneLink from "@/components/PhoneLink";
 import PageBanner from "@/components/PageBanner";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, CallOutcome } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 25;
 
+type CallsBucket = "0" | "1" | "2" | "3+";
+const CALLS_BUCKETS: { value: CallsBucket; label: string }[] = [
+  { value: "0", label: "ยังไม่เคยโทร" },
+  { value: "1", label: "1 ครั้ง" },
+  { value: "2", label: "2 ครั้ง" },
+  { value: "3+", label: "3 ครั้งขึ้นไป" },
+];
+
+/** contactId ที่ "การโทรครั้งล่าสุด" มีผลสายตามที่เลือก (DISTINCT ON ฝั่ง Postgres) */
+async function lastOutcomeContactIds(oc: CallOutcome): Promise<number[]> {
+  const rows = await prisma.$queryRaw<{ contactId: number }[]>`
+    WITH last_call AS (
+      SELECT DISTINCT ON (cl."contactId") cl."contactId" AS "contactId", cl.outcome AS outcome
+      FROM "CallLog" cl
+      ORDER BY cl."contactId", cl."calledAt" DESC, cl.id DESC
+    )
+    SELECT "contactId" FROM last_call WHERE outcome = ${oc}::"CallOutcome"`;
+  return rows.map((r) => r.contactId);
+}
+
+/** contactId ตามจำนวนครั้งที่โทร (1 / 2 / 3 ครั้งขึ้นไป) */
+async function callCountContactIds(bucket: "1" | "2" | "3+"): Promise<number[]> {
+  const rows =
+    bucket === "1"
+      ? await prisma.$queryRaw<{ contactId: number }[]>`SELECT "contactId" FROM "CallLog" GROUP BY "contactId" HAVING COUNT(*) = 1`
+      : bucket === "2"
+        ? await prisma.$queryRaw<{ contactId: number }[]>`SELECT "contactId" FROM "CallLog" GROUP BY "contactId" HAVING COUNT(*) = 2`
+        : await prisma.$queryRaw<{ contactId: number }[]>`SELECT "contactId" FROM "CallLog" GROUP BY "contactId" HAVING COUNT(*) >= 3`;
+  return rows.map((r) => r.contactId);
+}
+
 export default async function QueuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; brand?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; brand?: string; page?: string; outcome?: string; calls?: string }>;
 }) {
   const session = await requireSession();
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
   const brandId = sp.brand ? Number(sp.brand) : undefined;
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
+  const outcome =
+    sp.outcome && sp.outcome in OUTCOME_LABELS ? (sp.outcome as CallOutcome) : undefined;
+  const calls = CALLS_BUCKETS.some((b) => b.value === sp.calls)
+    ? (sp.calls as CallsBucket)
+    : undefined;
+
+  // กรองตามผลสายล่าสุด / จำนวนครั้งที่โทร → รวมเป็นเงื่อนไขชุด contactId แล้ว intersect
+  const extraFilter: Prisma.CampaignContactWhereInput = {};
+  const idLists: number[][] = [];
+  if (outcome) idLists.push(await lastOutcomeContactIds(outcome));
+  if (calls === "0") {
+    extraFilter.callLogs = { none: {} };
+    if (outcome) idLists.push([]);
+  } else if (calls) {
+    idLists.push(await callCountContactIds(calls));
+  }
+  if (idLists.length) {
+    const inter = idLists.reduce((a, b) => {
+      const s = new Set(b);
+      return a.filter((x) => s.has(x));
+    });
+    extraFilter.id = { in: inter };
+  }
 
   const where: Prisma.CampaignContactWhereInput = {
     status: "PENDING",
@@ -32,6 +86,7 @@ export default async function QueuePage({
       ...(q ? { phone: { contains: q.replace(/\D/g, "") } } : {}),
     },
     ...(session.role === "AGENT" ? { assignedToId: session.userId } : {}),
+    ...extraFilter,
   };
 
   const [total, contacts, brands] = await Promise.all([
@@ -64,13 +119,15 @@ export default async function QueuePage({
     const u = new URLSearchParams();
     if (q) u.set("q", q);
     if (brandId) u.set("brand", String(brandId));
+    if (outcome) u.set("outcome", outcome);
+    if (calls) u.set("calls", calls);
     u.set("page", String(p));
     return `/queue?${u.toString()}`;
   };
 
   return (
     <>
-      <PageBanner title="คิวโทร" subtitle="รายชื่อลูกค้าที่ต้องโทรติดตาม" />
+      <PageBanner title="คิวโทร" subtitle="รายชื่อลูกค้าที่ต้องโทรติดตาม · กรองตามผลสาย/จำนวนครั้งที่โทร" />
 
       <div className="card">
         <form className="row" method="get" style={{ flexWrap: "wrap" }}>
@@ -85,6 +142,28 @@ export default async function QueuePage({
               {brands.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="outcome">ผลสายล่าสุด</label>
+            <select id="outcome" name="outcome" defaultValue={outcome ?? ""}>
+              <option value="">ทั้งหมด</option>
+              {Object.entries(OUTCOME_LABELS).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="calls">จำนวนครั้งที่โทร</label>
+            <select id="calls" name="calls" defaultValue={calls ?? ""}>
+              <option value="">ทั้งหมด</option>
+              {CALLS_BUCKETS.map((b) => (
+                <option key={b.value} value={b.value}>
+                  {b.label}
                 </option>
               ))}
             </select>
