@@ -25,6 +25,12 @@ export default function Sidebar({
       ],
     },
     {
+      title: "รายงาน",
+      items: [
+        { href: "/reports/agents", label: "ผลงานพนักงาน", icon: "🏆", perm: "report.view" },
+      ],
+    },
+    {
       title: "เครื่องมือ",
       items: [
         { href: "/admin/campaigns", label: "แคมเปญ", icon: "🎯", perm: "campaign.manage" },
