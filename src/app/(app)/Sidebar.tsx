@@ -37,6 +37,7 @@ export default function Sidebar({
         { href: "/admin", label: "ผู้ใช้งาน", icon: "🛡️", perm: "user.manage" },
         { href: "/admin/brands", label: "จัดการเว็บ", icon: "🌐", perm: "brand.manage" },
         { href: "/admin/activity", label: "ตรวจสอบ/ทุจริต", icon: "🔎", perm: "activity.view" },
+        { href: "/admin/audit", label: "Audit Log", icon: "📋", perm: "audit.view" },
       ],
     },
   ];
